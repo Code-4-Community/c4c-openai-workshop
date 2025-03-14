@@ -11,6 +11,26 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Question from './Question';
+import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { z } from "zod";
+import pdfToText from 'react-pdftotext'
+
+
+
+
+const QuestionObject = z.object({
+  text: z.string(),
+  options: z.array(z.string()),
+  correctAnswer: z.string(),
+});
+
+
+const QuizObject = z.object({
+  questions: z.array(QuestionObject)
+});
+
+
 
 // Mock data
 const MOCK_QUESTIONS = [
@@ -46,18 +66,70 @@ const Quiz = () => {
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef(null);
 
+
+
+
+  const openai = new OpenAI({
+    apiKey: process.env.REACT_APP_OPEN_AI_KEY,
+    dangerouslyAllowBrowser: true
+  });
+  
+  
+
+const generateQuiz = async (content) => {
+  console.log("Generating quiz...");
+  try {
+    const completion = await openai.beta.chat.completions.parse({
+      model: "gpt-4o-2024-08-06",
+      messages: [
+        { role: "system", content: "Generate a quiz given the contents of a document. The quiz will be a list of question json objects. Each question will consist of text, 4 options, and a correect answer." },
+        { role: "user", content: `Generate a quiz based on this document: ${content}`},
+      ],
+      response_format: zodResponseFormat(QuizObject, "quiz"),
+    });
+    console.log("Quiz generated!");
+    const quiz = completion.choices[0].message.parsed;
+    setQuestions(quiz.questions);
+  }
+  catch (error) {
+    console.error("Error generating quiz:", error);
+  }
+};
+  
+
+
+
+
   const handleFileUpload = (event) => {
+    setIsProcessing(true);
     const file = event.target.files[0];
     if (!file) return;
-    
-    setIsProcessing(true);
-    // Simulate file processing delay
-    setTimeout(() => {
-      setIsProcessing(false);
-      setUploadComplete(true);
-      setQuestions(MOCK_QUESTIONS);
-    }, 2000);
+
+    console.log("File selected:", file);
+    pdfToText(file)
+      .then(async text => {
+        console.log("Extracted text:", text);
+        await generateQuiz(text);
+        setUploadComplete(true);
+      })
+      .catch(error => {
+        console.error("pdfToText error:", error);
+      })
+      .finally(() => {
+        setIsProcessing(false);
+      });
   };
+
+
+
+
+
+
+
+
+
+
+
 
   const handleAnswerSelect = (questionIndex, answer) => {
     setUserAnswers(prev => ({ ...prev, [questionIndex]: answer }));
