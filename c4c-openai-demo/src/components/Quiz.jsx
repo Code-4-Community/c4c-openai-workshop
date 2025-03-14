@@ -17,35 +17,6 @@ import { z } from "zod";
 import pdfToText from 'react-pdftotext'
 
 
-
-
-const QuestionObject = z.object({
-  text: z.string(),
-  options: z.array(z.string()),
-  correctAnswer: z.string(),
-});
-
-
-const QuizObject = z.object({
-  questions: z.array(QuestionObject)
-});
-
-
-
-// Mock data
-const MOCK_QUESTIONS = [
-  {
-    text: "What is the capital of France?",
-    options: ["London", "Paris", "Berlin", "Madrid"],
-    correctAnswer: "Paris"
-  },
-  {
-    text: "Which planet is known as the Red Planet?",
-    options: ["Venus", "Mars", "Jupiter", "Saturn"],
-    correctAnswer: "Mars"
-  }
-];
-
 const StyledUploadZone = styled(Paper)(({ theme }) => ({
   border: `2px dashed ${theme.palette.primary.main}`,
   padding: theme.spacing(8),
@@ -73,6 +44,19 @@ const Quiz = () => {
     apiKey: process.env.REACT_APP_OPEN_AI_KEY,
     dangerouslyAllowBrowser: true
   });
+  
+
+  const QuestionObject = z.object({
+    text: z.string(),
+    options: z.array(z.string()),
+    correctAnswer: z.string(),
+  });
+  
+  
+  const QuizObject = z.object({
+    questions: z.array(QuestionObject)
+  });
+  
   
   
 
