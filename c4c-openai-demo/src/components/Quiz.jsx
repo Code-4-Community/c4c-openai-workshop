@@ -12,8 +12,6 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Question from './Question';
 import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
-import { z } from "zod";
 import pdfToText from 'react-pdftotext'
 
 
@@ -45,18 +43,6 @@ const Quiz = () => {
     dangerouslyAllowBrowser: true
   });
   
-
-  const QuestionObject = z.object({
-    text: z.string(),
-    options: z.array(z.string()),
-    correctAnswer: z.string(),
-  });
-  
-  
-  const QuizObject = z.object({
-    questions: z.array(QuestionObject)
-  });
-  
   
   
 
@@ -68,11 +54,10 @@ const generateQuiz = async (content) => {
       messages: [
         { role: "system", content: "Generate a quiz given the contents of a document. The quiz will be a list of question json objects. Each question will consist of text, 4 options, and a correect answer." },
         { role: "user", content: `Generate a quiz based on this document: ${content}`},
-      ],
-      response_format: zodResponseFormat(QuizObject, "quiz"),
-    });
+      ]});
     console.log("Quiz generated!");
     const quiz = completion.choices[0].message.parsed;
+    console.log(completion.choices[0].message);
     setQuestions(quiz.questions);
   }
   catch (error) {
